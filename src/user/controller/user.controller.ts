@@ -6,22 +6,18 @@ import {
   Post,
   Put,
   Query,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { CurrentUser } from '../../decorators/current-user.decorator';
 import { UserService } from '../service/user.service';
 import { User } from '@prisma/client';
 import { RatingDto } from '../dto/rating.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
   ApiConflictResponse,
-  ApiConsumes,
   ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
@@ -36,7 +32,6 @@ import {
   reviewPropertiesWithComment,
 } from '../../schemas/review.properties';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Multer } from 'multer';
 import { Public } from '../../decorators/public.decorator';
 import { AuthGuard } from '../../auth/guard/auth/auth.guard';
 
@@ -82,9 +77,8 @@ export class UserController {
   }
 
   @Put('/profile-picture')
-  @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
-    summary: 'Upload profile picture',
+    summary: 'Upload profile picture encoded in base64',
     description: 'Upload a new profile picture',
   })
   @ApiOkResponse({
@@ -97,22 +91,17 @@ export class UserController {
   @ApiInternalServerErrorResponse({
     description: 'Failed to upload profile picture',
   })
-  @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
         file: {
           type: 'string',
-          format: 'binary',
         },
       },
     },
   })
-  async uploadFile(
-    @CurrentUser() user: User,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async uploadFile(@CurrentUser() user: User, @Body('file') file: string) {
     return this.userService.updateProfilePicture(user, file);
   }
 
