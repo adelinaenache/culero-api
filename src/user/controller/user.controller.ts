@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Put } from '@nestjs/common';
 import { CurrentUser } from '../../decorators/current-user.decorator';
 import { UserService } from '../service/user.service';
 import { User } from '@prisma/client';
@@ -21,13 +12,11 @@ import {
   ApiInternalServerErrorResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { userExtraProps, userProperties } from '../../schemas/user.properties';
+import { userProperties } from '../../schemas/user.properties';
 
 import { Public } from '../../decorators/public.decorator';
-import { AuthGuard } from '../../auth/guard/auth/auth.guard';
 
 @Controller('user')
 @ApiBearerAuth()
@@ -49,25 +38,6 @@ export class UserController {
   })
   async getCurrentUser(@CurrentUser() user: User) {
     return this.userService.getSelf(user);
-  }
-
-  @Get('/:userId')
-  @ApiOperation({
-    summary: 'Get another user',
-    description: 'Get the currently logged in user',
-  })
-  @ApiOkResponse({
-    description: 'User found',
-    schema: {
-      type: 'object',
-      properties: { ...userExtraProps, ...userProperties },
-    },
-  })
-  async getUser(
-    @CurrentUser() user: User,
-    @Param('userId') userId: User['id'],
-  ) {
-    return this.userService.getUser(user.id, userId);
   }
 
   @Put()
@@ -146,32 +116,5 @@ export class UserController {
     },
   ) {
     await this.userService.linkSocialAccount(userId, provider, accessToken);
-  }
-
-  @Get('search')
-  @ApiOperation({
-    summary: 'Search users',
-    description: 'Search for users',
-  })
-  @ApiOkResponse({
-    description: 'Users found',
-    schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: { ...userExtraProps, ...userProperties },
-      },
-    },
-  })
-  @ApiQuery({
-    name: 'query',
-    type: 'string',
-  })
-  @UseGuards(AuthGuard)
-  async searchUsers(
-    @CurrentUser() user: User,
-    @Query() { query }: { query: string },
-  ) {
-    return this.userService.searchUsers(user.id, query);
   }
 }
